@@ -103,10 +103,10 @@ jobs:
           & $iscc "/DAppVersion=$env:VCM_VERSION" installer/vcm.iss
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: VCM-Setup-${{ steps.version.outputs.version }}
-          path: out/VCM-Setup-*.exe
+          path: out/VCM-Setup-${{ steps.version.outputs.version }}.exe
+          archive: false
           if-no-files-found: error
 
   release:
@@ -116,9 +116,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
-          name: VCM-Setup-${{ needs.build.outputs.version }}
+          name: VCM-Setup-${{ needs.build.outputs.version }}.exe
 
       - uses: softprops/action-gh-release@v2
         with:
