@@ -1,0 +1,124 @@
+name: Build
+
+# The version lives in Directory.Build.props. Every build is named after it.
+# A release is created from master (or a matching v* tag) when the tag v<version> does not exist yet.
+# Pull requests and other branches only upload the installer as an artifact.
+on:
+  push:
+    branches: [master]
+    tags: ['v*.*.*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release: ${{ steps.version.outputs.release }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $props = [xml](Get-Content Directory.Build.props -Raw)
+          $version = @($props.Project.PropertyGroup.Version)[0]
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
+            throw "Invalid <Version> '$version' in Directory.Build.props, expected x.y.z or x.y.z-suffix."
+          }
+          $release = $false
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            if ($env:GITHUB_REF_NAME -ne "v$version") {
+              throw "Tag $env:GITHUB_REF_NAME does not match <Version> $version in Directory.Build.props."
+            }
+            $release = $true
+          } elseif ($env:GITHUB_REF -eq 'refs/heads/master') {
+            $release = -not (git tag --list "v$version")
+          }
+          $numeric = ($version -split '-')[0]
+          "VCM_VERSION=$version" >> $env:GITHUB_ENV
+          "VCM_VERSION_NUMERIC=$numeric" >> $env:GITHUB_ENV
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "release=$($release.ToString().ToLower())" >> $env:GITHUB_OUTPUT
+          Write-Host "Version $version (release: $release)"
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Get WIL
+        shell: pwsh
+        run: |
+          # Same tag as the local Docker build uses.
+          $tag = (Select-String -Path build/Dockerfile.msvc -Pattern '^ARG WIL_TAG=(\S+)').Matches[0].Groups[1].Value
+          git clone --depth 1 --branch $tag https://github.com/microsoft/wil "$env:RUNNER_TEMP/wil"
+
+      - name: Native virtual camera DLL
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          cmd /c "`"$vs\VC\Auxiliary\Build\vcvars64.bat`" >nul && set" | ForEach-Object {
+            if ($_ -match '^([^=]+)=(.*)$') { Set-Item -Path "env:$($Matches[1])" -Value $Matches[2] }
+          }
+          $wil = "$env:RUNNER_TEMP/wil/include" -replace '\\', '/'
+          cmake -S src/Vcm.VirtualCamera -B build/cmake-x64 -G Ninja -DCMAKE_BUILD_TYPE=Release "-DWIL_INCLUDE_DIR=$wil" "-DVCM_VERSION=$env:VCM_VERSION_NUMERIC"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build build/cmake-x64
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force out/native | Out-Null
+          Copy-Item build/cmake-x64/VcmVirtualCamera.dll out/native/
+
+      - name: Unit tests
+        run: dotnet test --project tests/Vcm.Core.Tests
+
+      - name: Publish app
+        shell: pwsh
+        run: |
+          dotnet publish src/Vcm.App -c Release -r win-x64 --self-contained false -o out/app -p:DebugType=none
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          if (-not (Test-Path out/app/VcmVirtualCamera.dll)) { throw 'VcmVirtualCamera.dll missing from out/app' }
+
+      - name: Installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=$env:VCM_VERSION" installer/vcm.iss
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: out/VCM-Setup-${{ steps.version.outputs.version }}.exe
+          archive: false
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: needs.build.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: VCM-Setup-${{ needs.build.outputs.version }}.exe
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ needs.build.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: v${{ needs.build.outputs.version }}
+          generate_release_notes: true
+          prerelease: ${{ contains(needs.build.outputs.version, '-') }}
+          files: VCM-Setup-*.exe

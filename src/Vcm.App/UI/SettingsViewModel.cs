@@ -111,6 +111,8 @@ internal sealed class SettingsViewModel : INotifyPropertyChanged
 
     public bool CameraAvailable => _controller.Camera.Availability == CameraAvailability.Available;
 
+    public string VersionText => Loc.Format("VersionLabel", AppInfo.Version);
+
     public bool CameraWarningOpen => !CameraAvailable;
 
     public string CameraWarning => Loc.Get(_controller.Camera.Availability == CameraAvailability.UnsupportedOs
