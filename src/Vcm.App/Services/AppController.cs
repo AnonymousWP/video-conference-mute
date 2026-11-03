@@ -179,6 +179,10 @@ internal sealed class AppController : IDisposable
         {
             _sound.Play(change.Muted);
         }
+        if (change.UserInitiated && change.Device == VcmDevice.Microphone && _settings.SyncApplicationMute)
+        {
+            ForegroundAppMuteService.Toggle();
+        }
         if (_running) _toolbar.Flash();
         RefreshIndicators();
     }

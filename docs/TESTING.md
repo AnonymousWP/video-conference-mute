@@ -40,6 +40,7 @@ real PC. Keep `%TEMP%\VCM.log` and `%ProgramData%\VCM\camera.log` at hand when s
 - [ ] Plugging a microphone in while muted: it gets muted too. Unplugging it: no errors.
 - [ ] Unplugging and replugging the selected microphone: it is controlled again.
 - [ ] Unmuting from Sound settings is reflected by toolbar and tray. With "Keep microphone muted" on, VCM mutes it again.
+- [ ] "Mute the meeting app too" on, in a Jitsi/Zoom/Teams/Meet/Discord call in the foreground: the mic shortcut also toggles the app's own mute button, and nothing is sent when another window is in front (e.g. Notepad).
 
 ## Camera (virtual camera "VideoConference Mute")
 

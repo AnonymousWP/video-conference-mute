@@ -103,6 +103,12 @@ internal sealed class SettingsViewModel : INotifyPropertyChanged
         set => Update(s => s.EnforceMicrophoneMute = value);
     }
 
+    public bool SyncApplicationMute
+    {
+        get => _settings.SyncApplicationMute;
+        set => Update(s => s.SyncApplicationMute = value);
+    }
+
     public bool CameraAvailable => _controller.Camera.Availability == CameraAvailability.Available;
 
     public bool CameraWarningOpen => !CameraAvailable;

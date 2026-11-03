@@ -28,6 +28,8 @@ internal static class Strings
         ["PushToReverseDescription"] = "If enabled, allows both push to talk and push to mute, depending on microphone state",
         ["EnforceMute"] = "Keep microphone muted",
         ["EnforceMuteDescription"] = "If another app unmutes the microphone while it is muted here, mute it again",
+        ["SyncAppMute"] = "Mute the meeting app too",
+        ["SyncAppMuteDescription"] = "Also sends the mute shortcut to the foreground Jitsi, Zoom, Teams, Meet or Discord window. If the app was already muted by hand, they end up reversed",
 
         ["Camera"] = "Camera",
         ["CameraDescription"] = "To use this feature, make sure to select VideoConference Mute as your camera source in your apps.",
@@ -125,6 +127,8 @@ internal static class Strings
         ["PushToReverseDescription"] = "Se abilitato, consente sia di premere per parlare sia di premere per disattivare, in base allo stato del microfono",
         ["EnforceMute"] = "Mantieni il microfono disattivato",
         ["EnforceMuteDescription"] = "Se un'altra app riattiva il microfono mentre qui è disattivato, lo disattiva di nuovo",
+        ["SyncAppMute"] = "Disattiva anche l'app della riunione",
+        ["SyncAppMuteDescription"] = "Invia anche la scorciatoia di disattivazione audio alla finestra in primo piano di Jitsi, Zoom, Teams, Meet o Discord. Se l'app era già disattivata a mano, gli stati risultano invertiti",
 
         ["Camera"] = "Camera",
         ["CameraDescription"] = "Per usare questa funzione, seleziona VideoConference Mute come camera nelle tue app.",

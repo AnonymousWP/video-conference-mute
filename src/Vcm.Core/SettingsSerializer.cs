@@ -51,6 +51,7 @@ public static class SettingsSerializer
         settings.TrayIconShowsState = ReadBool(props, "tray_icon_shows_state") ?? settings.TrayIconShowsState;
         settings.PlaySoundOnToggle = ReadBool(props, "play_sound_on_toggle") ?? settings.PlaySoundOnToggle;
         settings.EnforceMicrophoneMute = ReadBool(props, "enforce_microphone_mute") ?? settings.EnforceMicrophoneMute;
+        settings.SyncApplicationMute = ReadBool(props, "sync_application_mute") ?? settings.SyncApplicationMute;
 
         settings.Normalize();
         return settings;
@@ -77,6 +78,7 @@ public static class SettingsSerializer
             ["tray_icon_shows_state"] = Value(settings.TrayIconShowsState),
             ["play_sound_on_toggle"] = Value(settings.PlaySoundOnToggle),
             ["enforce_microphone_mute"] = Value(settings.EnforceMicrophoneMute),
+            ["sync_application_mute"] = Value(settings.SyncApplicationMute),
         };
 
         var root = new JsonObject
