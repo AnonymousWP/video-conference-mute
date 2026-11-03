@@ -238,6 +238,7 @@ internal sealed class AppController : IDisposable
         }, !_settings.Enabled));
         menu.Items.Add(Item("RunAtStartup", SymbolRegular.Rocket24, () => StartupRegistration.Set(!StartupRegistration.IsEnabled), StartupRegistration.IsEnabled));
         menu.Items.Add(new Separator());
+        menu.Items.Add(new MenuItem { Header = Loc.Format("VersionLabel", AppInfo.Version), IsEnabled = false });
         menu.Items.Add(Item("TrayExit", SymbolRegular.Power24, () => Application.Current.Shutdown()));
         return menu;
     }
