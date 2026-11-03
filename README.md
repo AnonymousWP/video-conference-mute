@@ -3,11 +3,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/SimoneFaricelli/video-conference-mute/releases/latest"><img src="https://img.shields.io/github/v/release/SimoneFaricelli/video-conference-mute?style=flat-square&color=4F46E5&label=release" alt="Latest release"></a>
-  <a href="https://github.com/SimoneFaricelli/video-conference-mute/releases"><img src="https://img.shields.io/github/downloads/SimoneFaricelli/video-conference-mute/total?style=flat-square&color=0EA5E9" alt="Downloads"></a>
+  <a href="https://github.com/AnonymousWP/video-conference-mute/releases/latest"><img src="https://img.shields.io/github/v/release/AnonymousWP/video-conference-mute?style=flat-square&color=4F46E5&label=release" alt="Latest release"></a>
+  <a href="https://github.com/AnonymousWP/video-conference-mute/releases"><img src="https://img.shields.io/github/downloads/AnonymousWP/video-conference-mute/total?style=flat-square&color=0EA5E9" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows11&logoColor=white" alt="Windows 10 | 11">
   <img src="https://img.shields.io/badge/.NET-10-512BD4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/SimoneFaricelli/video-conference-mute?style=flat-square&color=8B5CF6" alt="MIT license"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/AnonymousWP/video-conference-mute?style=flat-square&color=8B5CF6" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/SimoneFaricelli/video-conference-mute/releases/latest"><b>⬇️ Download the installer</b></a>
+  <a href="https://github.com/AnonymousWP/video-conference-mute/releases/latest"><b>⬇️ Download the installer</b></a>
   &nbsp;·&nbsp;
   <a href="#-getting-started">🚀 Getting started</a>
   &nbsp;·&nbsp;
@@ -98,7 +98,7 @@ your existing PowerToys settings are imported automatically.
 
 ## 🚀 Getting started
 
-1. **Download** `VCM-Setup-x.y.z.exe` from the [latest release](https://github.com/SimoneFaricelli/video-conference-mute/releases/latest)
+1. **Download** `VCM-Setup-x.y.z.exe` from the [latest release](https://github.com/AnonymousWP/video-conference-mute/releases/latest)
    and run it.
    - If the .NET 10 Desktop Runtime is missing, the installer downloads it.
    - Administrator rights are needed **once**, to register the virtual camera. VCM itself then runs as a normal
@@ -129,7 +129,15 @@ Everything builds on **Linux with Docker**, with no Windows machine needed:
 ```
 
 The script builds the virtual camera DLL, runs the unit tests, publishes the app and packages the installer
-`out/VCM-Setup-x.y.z.exe`.
+`out/VCM-Setup-x.y.z.exe`. Set the version with `VERSION=x.y.z ./build/build.sh` (default: latest git tag + `-dev`).
+
+### 📦 Releases
+
+The GitHub Actions workflow (`.github/workflows/build.yml`) builds everything on Windows:
+
+- Push a tag `vX.Y.Z`, or run the workflow manually on `master` with a version, to publish a release with generated
+  notes and `VCM-Setup-X.Y.Z.exe`. A version with a suffix (`1.4.0-rc.1`) is marked as a prerelease.
+- Pull requests, and manual runs on any other branch, only upload the installer as a workflow artifact for testing.
 
 | Component | Toolchain |
 |---|---|
@@ -168,7 +176,7 @@ On Windows you can also build the C# projects with `dotnet build` and the DLL wi
 | 🎥 Virtual camera log | `%ProgramData%\VCM\camera.log` |
 | ⚙️ Settings | `%LOCALAPPDATA%\VCM\settings.json` |
 
-Found a bug? [Open an issue](https://github.com/SimoneFaricelli/video-conference-mute/issues) and attach both logs.
+Found a bug? [Open an issue](https://github.com/AnonymousWP/video-conference-mute/issues) and attach both logs.
 
 ## 📄 License
 

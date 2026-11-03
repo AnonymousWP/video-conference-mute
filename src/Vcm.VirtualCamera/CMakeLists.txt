@@ -21,6 +21,14 @@ add_library(VcmVirtualCamera SHARED
     VcmVirtualCamera.def
     VcmVirtualCamera.rc)
 
+set(VCM_VERSION "" CACHE STRING "Version x.y.z[-suffix] stamped into the DLL resources (required)")
+string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+)" _vcm_ver "${VCM_VERSION}")
+if(NOT _vcm_ver)
+    message(FATAL_ERROR "VCM_VERSION must start with x.y.z, got '${VCM_VERSION}'")
+endif()
+set_source_files_properties(VcmVirtualCamera.rc PROPERTIES COMPILE_DEFINITIONS
+    "VCM_VERSION_MAJOR=${CMAKE_MATCH_1};VCM_VERSION_MINOR=${CMAKE_MATCH_2};VCM_VERSION_PATCH=${CMAKE_MATCH_3}")
+
 target_include_directories(VcmVirtualCamera PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${WIL_INCLUDE_DIR})
 target_precompile_headers(VcmVirtualCamera PRIVATE pch.h)
 target_compile_definitions(VcmVirtualCamera PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A00000C)

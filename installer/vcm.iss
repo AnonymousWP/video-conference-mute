@@ -2,7 +2,9 @@
 ; Built by build/build.sh from out/app; see README.md.
 
 #define AppName "VideoConference Mute"
-#define AppVersion "1.0.0"
+#ifndef AppVersion
+  #error Pass the version: ISCC /DAppVersion=x.y.z vcm.iss
+#endif
 #define AppExe "VCM.exe"
 #define SourceDir "..\out\app"
 

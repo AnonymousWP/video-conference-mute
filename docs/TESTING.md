@@ -5,7 +5,7 @@ real PC. Keep `%TEMP%\VCM.log` and `%ProgramData%\VCM\camera.log` at hand when s
 
 ## Install
 
-- [ ] `VCM-Setup-1.0.0.exe` installs the .NET 10 Desktop Runtime when it is missing.
+- [ ] `VCM-Setup-x.y.z.exe` installs the .NET 10 Desktop Runtime when it is missing.
 - [ ] `HKLM\SOFTWARE\Classes\CLSID\{D0AB47C7-9EBA-4D7A-AF72-4769A4D62109}\InprocServer32` points to
       `C:\Program Files\VCM\VcmVirtualCamera.dll`.
 - [ ] The app starts after setup and opens the settings window. The tray icon appears.
