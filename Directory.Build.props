@@ -3,6 +3,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Single source of truth: CI, build.sh, the DLL resources and the installer all read this. -->
+    <Version>1.3.0</Version>
     <Company>VCM</Company>
     <Product>VideoConference Mute</Product>
     <Copyright>MIT License</Copyright>

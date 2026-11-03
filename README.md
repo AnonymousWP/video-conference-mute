@@ -129,15 +129,17 @@ Everything builds on **Linux with Docker**, with no Windows machine needed:
 ```
 
 The script builds the virtual camera DLL, runs the unit tests, publishes the app and packages the installer
-`out/VCM-Setup-x.y.z.exe`. Set the version with `VERSION=x.y.z ./build/build.sh` (default: latest git tag + `-dev`).
+`out/VCM-Setup-x.y.z.exe`. The version is the `<Version>` in `Directory.Build.props`.
 
 ### 📦 Releases
 
 The GitHub Actions workflow (`.github/workflows/build.yml`) builds everything on Windows:
 
-- Push a tag `vX.Y.Z`, or run the workflow manually on `master` with a version, to publish a release with generated
-  notes and `VCM-Setup-X.Y.Z.exe`. A version with a suffix (`1.4.0-rc.1`) is marked as a prerelease.
-- Pull requests, and manual runs on any other branch, only upload the installer as a workflow artifact for testing.
+- The version is the `<Version>` in `Directory.Build.props`; every build is named after it (`VCM-Setup-X.Y.Z.exe`).
+- A push to `master` (or a manual run there) whose version has no `vX.Y.Z` tag yet creates the tag and a release with
+  generated notes. A version with a suffix (`1.4.0-rc.1`) is marked as a prerelease.
+- Pushing a `vX.Y.Z` tag by hand also releases, but only if it matches the file version.
+- Pull requests and other branches only upload the installer as a workflow artifact for testing.
 
 | Component | Toolchain |
 |---|---|

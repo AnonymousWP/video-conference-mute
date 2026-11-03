@@ -1,23 +1,19 @@
 name: Build
 
-# Tag v*.*.* -> release. Manual run on master with a version -> release. Anything else only uploads the installer as an artifact.
+# The version lives in Directory.Build.props. Every build is named after it.
+# A release is created from master (or a matching v* tag) when the tag v<version> does not exist yet.
+# Pull requests and other branches only upload the installer as an artifact.
 on:
   push:
     branches: [master]
     tags: ['v*.*.*']
   pull_request:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version x.y.z[-suffix] (required to publish a release from master)'
-        required: false
-        type: string
 
 permissions:
   contents: read
 
 env:
-  WIL_TAG: v1.0.260126.7
   DOTNET_NOLOGO: 1
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
@@ -35,25 +31,20 @@ jobs:
       - name: Resolve version
         id: version
         shell: pwsh
-        env:
-          INPUT_VERSION: ${{ inputs.version }}
         run: |
+          $props = [xml](Get-Content Directory.Build.props -Raw)
+          $version = @($props.Project.PropertyGroup.Version)[0]
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
+            throw "Invalid <Version> '$version' in Directory.Build.props, expected x.y.z or x.y.z-suffix."
+          }
           $release = $false
           if ($env:GITHUB_REF_TYPE -eq 'tag') {
-            $version = $env:GITHUB_REF_NAME -replace '^v', ''
+            if ($env:GITHUB_REF_NAME -ne "v$version") {
+              throw "Tag $env:GITHUB_REF_NAME does not match <Version> $version in Directory.Build.props."
+            }
             $release = $true
-          } elseif ($env:INPUT_VERSION) {
-            $version = $env:INPUT_VERSION -replace '^v', ''
-            $release = $env:GITHUB_REF -eq 'refs/heads/master'
-          } elseif ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch' -and $env:GITHUB_REF -eq 'refs/heads/master') {
-            throw 'Provide the version input to publish a release from master.'
-          } else {
-            $lastTag = git describe --tags --abbrev=0 2>$null
-            if (-not $lastTag) { $lastTag = '0.0.0' }
-            $version = "$($lastTag -replace '^v', '')-ci.$env:GITHUB_RUN_NUMBER"
-          }
-          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
-            throw "Invalid version '$version', expected x.y.z or x.y.z-suffix."
+          } elseif ($env:GITHUB_REF -eq 'refs/heads/master') {
+            $release = -not (git tag --list "v$version")
           }
           $numeric = ($version -split '-')[0]
           "VCM_VERSION=$version" >> $env:GITHUB_ENV
@@ -68,15 +59,18 @@ jobs:
 
       - name: Get WIL
         shell: pwsh
-        run: git clone --depth 1 --branch $env:WIL_TAG https://github.com/microsoft/wil "$env:RUNNER_TEMP/wil"
-
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+        run: |
+          # Same tag as the local Docker build uses.
+          $tag = (Select-String -Path build/Dockerfile.msvc -Pattern '^ARG WIL_TAG=(\S+)').Matches[0].Groups[1].Value
+          git clone --depth 1 --branch $tag https://github.com/microsoft/wil "$env:RUNNER_TEMP/wil"
 
       - name: Native virtual camera DLL
         shell: pwsh
         run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          cmd /c "`"$vs\VC\Auxiliary\Build\vcvars64.bat`" >nul && set" | ForEach-Object {
+            if ($_ -match '^([^=]+)=(.*)$') { Set-Item -Path "env:$($Matches[1])" -Value $Matches[2] }
+          }
           $wil = "$env:RUNNER_TEMP/wil/include" -replace '\\', '/'
           cmake -S src/Vcm.VirtualCamera -B build/cmake-x64 -G Ninja -DCMAKE_BUILD_TYPE=Release "-DWIL_INCLUDE_DIR=$wil" "-DVCM_VERSION=$env:VCM_VERSION_NUMERIC"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
@@ -91,7 +85,7 @@ jobs:
       - name: Publish app
         shell: pwsh
         run: |
-          dotnet publish src/Vcm.App -c Release -r win-x64 --self-contained false -o out/app -p:DebugType=none "-p:Version=$env:VCM_VERSION"
+          dotnet publish src/Vcm.App -c Release -r win-x64 --self-contained false -o out/app -p:DebugType=none
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           if (-not (Test-Path out/app/VcmVirtualCamera.dll)) { throw 'VcmVirtualCamera.dll missing from out/app' }
 

@@ -4,7 +4,7 @@
 #   2. unit tests + the WPF app (.NET 10 SDK)
 #   3. the installer (Inno Setup under wine)
 # Output: out/native, out/app, out/VCM-Setup-<version>.exe
-# Version: VERSION env var, else <latest git tag>-dev. Releases get their version from the tag in CI.
+# Version: <Version> in Directory.Build.props.
 #
 # Building the MSVC image downloads Visual Studio Build Tools and the Windows SDK and accepts their license
 # (https://go.microsoft.com/fwlink/?LinkId=2086102).
@@ -12,11 +12,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 USER_ID="$(id -u):$(id -g)"
-if [ -z "${VERSION:-}" ]; then
-    LAST_TAG="$(git -C "$ROOT" describe --tags --abbrev=0 2>/dev/null || true)"
-    [ -n "$LAST_TAG" ] || { echo "No git tag found: set VERSION=x.y.z" >&2; exit 1; }
-    VERSION="${LAST_TAG#v}-dev"
-fi
+VERSION="$(sed -n 's|.*<Version>\(.*\)</Version>.*|\1|p' "$ROOT/Directory.Build.props" | head -n1)"
+[ -n "$VERSION" ] || { echo "No <Version> in Directory.Build.props" >&2; exit 1; }
 
 DOTNET_IMAGE="mcr.microsoft.com/dotnet/sdk:10.0@sha256:de4fe90a98845d75910b9769662465c84de1a934665c431279d1382b2bddc02b"
 INNO_IMAGE="amake/innosetup@sha256:e003376ba818547275fe10c95e2a29be0f2d12d45e9eb8f205b6672dc5685bb1"
@@ -53,7 +50,7 @@ dotnet test --project tests/Vcm.Core.Tests
 
 step "WPF app"
 rm -rf "$ROOT/out/app"
-dotnet publish src/Vcm.App -c Release -r win-x64 --self-contained false -o out/app -p:DebugType=none -p:Version="$VERSION"
+dotnet publish src/Vcm.App -c Release -r win-x64 --self-contained false -o out/app -p:DebugType=none
 test -f "$ROOT/out/app/VcmVirtualCamera.dll" || { echo "VcmVirtualCamera.dll missing from out/app" >&2; exit 1; }
 
 step "Installer"
