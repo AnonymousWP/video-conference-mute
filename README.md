@@ -57,6 +57,8 @@ your existing PowerToys settings are imported automatically.
 - 🎙️ **Microphone**
   - Mute every microphone (`[All]`) or a specific one.
   - **Push to reverse**: hold the shortcut to temporarily mute an open microphone.
+  - **Mute the meeting app too** (optional): also sends the mute shortcut to the foreground Jitsi, Zoom, Teams,
+    Meet or Discord window. Those shortcuts only toggle, so mute the app by hand first if it was already muted.
 - 📷 **Camera**
   - The **"VideoConference Mute"** virtual camera wraps your physical webcam.
   - While muted, it shows an image of your choice (or black).

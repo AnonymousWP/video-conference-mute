@@ -72,6 +72,7 @@ public sealed class VcmSettings
     public bool TrayIconShowsState { get; set; } = true;
     public bool PlaySoundOnToggle { get; set; }
     public bool EnforceMicrophoneMute { get; set; }
+    public bool SyncApplicationMute { get; set; }
 
     public VcmSettings Clone() => (VcmSettings)MemberwiseClone();
 

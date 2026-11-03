@@ -41,6 +41,7 @@ public class SettingsTests
         Assert.True(s.CameraPowerOffWhenMuted);
         Assert.False(s.PlaySoundOnToggle);
         Assert.False(s.EnforceMicrophoneMute);
+        Assert.False(s.SyncApplicationMute);
     }
 
     [Fact]
@@ -67,6 +68,7 @@ public class SettingsTests
         var s = SettingsSerializer.Deserialize(PowerToysJson);
         s.PlaySoundOnToggle = true;
         s.EnforceMicrophoneMute = true;
+        s.SyncApplicationMute = true;
         s.CameraPowerOffWhenMuted = false;
         s.TrayIconShowsState = false;
         s.Enabled = false;

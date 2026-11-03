@@ -13,7 +13,7 @@ namespace Vcm.App.Services;
 internal sealed class KeyboardHook : IDisposable
 {
     // Marks the input we inject ourselves.
-    private static readonly IntPtr InjectedMarker = new(0x56434D00);
+    internal static readonly IntPtr InjectedMarker = new(0x56434D00);
 
     private readonly NativeMethods.LowLevelKeyboardProc _proc;
     private readonly Action<HotkeyAction> _pressed;
