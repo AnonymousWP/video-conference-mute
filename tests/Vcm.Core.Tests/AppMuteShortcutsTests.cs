@@ -25,4 +25,40 @@ public class AppMuteShortcutsTests
     {
         Assert.Null(AppMuteShortcuts.Find(process, title));
     }
+
+    [Fact]
+    public void KeySequence_NeverPressesLiftedModifiersAgain()
+    {
+        var zoom = new HotkeySettings(false, false, true, false, 'A');
+
+        var keys = AppMuteKeySequence.Build(zoom, [KeyNames.VK_LWIN, KeyNames.VK_LSHIFT]);
+
+        Assert.DoesNotContain(keys, k => !k.Up && (k.Vk == KeyNames.VK_LWIN || k.Vk == KeyNames.VK_LSHIFT));
+        Assert.Contains(new AppMuteKey(KeyNames.VK_LWIN, Up: true), keys);
+        Assert.Contains(new AppMuteKey(KeyNames.VK_LSHIFT, Up: true), keys);
+    }
+
+    [Fact]
+    public void KeySequence_EveryKeyDownIsReleased()
+    {
+        var teams = new HotkeySettings(false, true, false, true, 'M');
+
+        var keys = AppMuteKeySequence.Build(teams, [KeyNames.VK_LWIN, KeyNames.VK_RSHIFT]);
+
+        foreach (var vk in keys.Where(k => !k.Up).Select(k => k.Vk).Distinct())
+        {
+            Assert.Equal(keys.Count(k => k.Vk == vk && !k.Up), keys.Count(k => k.Vk == vk && k.Up));
+        }
+    }
+
+    [Fact]
+    public void KeySequence_UnassignedKeyOnlyWhenWinOrAltLifted()
+    {
+        var jitsi = new HotkeySettings(false, false, false, false, 'M');
+        var withShift = AppMuteKeySequence.Build(jitsi, [KeyNames.VK_LSHIFT]);
+        var withWin = AppMuteKeySequence.Build(jitsi, [KeyNames.VK_LWIN]);
+
+        Assert.DoesNotContain(withShift, k => k.Vk == AppMuteKeySequence.UnassignedKey);
+        Assert.Contains(withWin, k => k.Vk == AppMuteKeySequence.UnassignedKey);
+    }
 }

@@ -5,6 +5,15 @@ namespace Vcm.Core.Tests;
 public class ModifierTrackerTests
 {
     [Fact]
+    public void CapsLock_IsNotAModifier()
+    {
+        var t = new ModifierTracker();
+        t.Update(0x14, true);
+        t.Update(0x14, false);
+        Assert.False(t.Win || t.Ctrl || t.Alt || t.Shift);
+    }
+
+    [Fact]
     public void WinHeldAcrossRepeatedKeys_StaysDown()
     {
         var t = new ModifierTracker();

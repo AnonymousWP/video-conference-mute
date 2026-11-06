@@ -47,10 +47,16 @@ public sealed class VcmSettings
 {
     public const string AllMicrophones = "[All]";
 
-    public static HotkeySettings DefaultMuteCameraAndMicrophoneHotkey => new(true, false, false, true, 'Q');
-    public static HotkeySettings DefaultMuteMicrophoneHotkey => new(true, false, false, true, 'A');
-    public static HotkeySettings DefaultPushToTalkMicrophoneHotkey => new(true, false, false, true, 'I');
-    public static HotkeySettings DefaultMuteCameraHotkey => new(true, false, false, true, 'O');
+    // Win+Shift+key caused accidental triggers when typing capital letters.
+    public const int CurrentHotkeyDefaultsVersion = 2;
+
+    public static HotkeySettings DefaultMuteCameraAndMicrophoneHotkey => new(true, false, false, false, 'Q');
+    public static HotkeySettings DefaultMuteMicrophoneHotkey => new(true, false, false, false, 'A');
+    public static HotkeySettings DefaultPushToTalkMicrophoneHotkey => new(true, false, false, false, 'I');
+    public static HotkeySettings DefaultMuteCameraHotkey => new(true, false, false, false, 'O');
+
+    /// <summary>Version 1 are the PowerToys defaults (Win+Shift+key); settings of that version are migrated on load.</summary>
+    public int HotkeyDefaultsVersion { get; set; } = CurrentHotkeyDefaultsVersion;
 
     // Settings of the original PowerToys module.
     public HotkeySettings MuteCameraAndMicrophoneHotkey { get; set; } = DefaultMuteCameraAndMicrophoneHotkey;
@@ -75,6 +81,21 @@ public sealed class VcmSettings
     public bool SyncApplicationMute { get; set; }
 
     public VcmSettings Clone() => (VcmSettings)MemberwiseClone();
+
+    /// <summary>Moves shortcuts that are still the old Win+Shift+key defaults to the current defaults, once.</summary>
+    public void MigrateHotkeyDefaults()
+    {
+        if (HotkeyDefaultsVersion >= CurrentHotkeyDefaultsVersion) return;
+
+        MuteCameraAndMicrophoneHotkey = MigrateHotkey(MuteCameraAndMicrophoneHotkey, 'Q', DefaultMuteCameraAndMicrophoneHotkey);
+        MuteMicrophoneHotkey = MigrateHotkey(MuteMicrophoneHotkey, 'A', DefaultMuteMicrophoneHotkey);
+        PushToTalkMicrophoneHotkey = MigrateHotkey(PushToTalkMicrophoneHotkey, 'I', DefaultPushToTalkMicrophoneHotkey);
+        MuteCameraHotkey = MigrateHotkey(MuteCameraHotkey, 'O', DefaultMuteCameraHotkey);
+        HotkeyDefaultsVersion = CurrentHotkeyDefaultsVersion;
+    }
+
+    private static HotkeySettings MigrateHotkey(HotkeySettings? current, int oldKey, HotkeySettings replacement) =>
+        current is { Win: true, Ctrl: false, Alt: false, Shift: true } && current.Code == oldKey ? replacement : current ?? replacement;
 
     /// <summary>Replaces values that are not among the allowed ones with their defaults.</summary>
     public void Normalize()

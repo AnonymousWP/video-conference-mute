@@ -13,11 +13,13 @@ real PC. Keep `%TEMP%\VCM.log` and `%ProgramData%\VCM\camera.log` at hand when s
 
 ## Shortcuts
 
-- [ ] Win+Shift+A toggles the microphone. Check it in the volume mixer or Sound settings.
-- [ ] Win+Shift+O toggles the camera.
-- [ ] Win+Shift+Q, camera idle: toggles the microphone only.
-- [ ] Win+Shift+Q, camera in use, both on: mutes both. Both off: unmutes both. One muted: mutes the other.
-- [ ] Push to talk (Win+Shift+I), microphone muted: unmuted while held, muted again on release.
+- [ ] Win+A toggles the microphone. Check it in the volume mixer or Sound settings.
+- [ ] Win+O toggles the camera.
+- [ ] Win+Q, camera idle: toggles the microphone only.
+- [ ] Win+Q, camera in use, both on: mutes both. Both off: unmutes both. One muted: mutes the other.
+- [ ] Push to talk (Win+I), microphone muted: unmuted while held, muted again on release.
+- [ ] Settings saved with the old Win+Shift defaults show the new defaults after the update; a custom shortcut is kept.
+- [ ] With "Sync application mute" on and Discord or Zoom focused, tap the mute shortcut many times quickly, then press Caps Lock and type `a` and `A`: the microphone does not toggle.
 - [ ] Push to talk with the microphone open: nothing happens (fixed behaviour).
 - [ ] Push to reverse on, microphone open: muted while held.
 - [ ] Shortcuts work while an elevated window (e.g. admin Terminal) has focus.

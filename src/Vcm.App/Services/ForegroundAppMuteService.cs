@@ -13,13 +13,11 @@ internal static class ForegroundAppMuteService
 {
     private static readonly object SendGate = new();
 
-    // Modifiers that may still be physically held from VCM's own shortcut; the flag marks extended keys.
-    private static readonly (int Vk, bool Extended)[] ModifierKeys =
+    // Modifiers that may still be physically held from VCM's own shortcut.
+    private static readonly int[] ModifierKeys =
     [
-        (KeyNames.VK_LWIN, true), (KeyNames.VK_RWIN, true),
-        (KeyNames.VK_LSHIFT, false), (KeyNames.VK_RSHIFT, false),
-        (KeyNames.VK_LCONTROL, false), (KeyNames.VK_RCONTROL, true),
-        (KeyNames.VK_LMENU, false), (KeyNames.VK_RMENU, true),
+        KeyNames.VK_LWIN, KeyNames.VK_RWIN, KeyNames.VK_LSHIFT, KeyNames.VK_RSHIFT,
+        KeyNames.VK_LCONTROL, KeyNames.VK_RCONTROL, KeyNames.VK_LMENU, KeyNames.VK_RMENU,
     ];
 
     /// <summary>Resolves the foreground window now and sends the shortcut in the background.</summary>
@@ -70,32 +68,9 @@ internal static class ForegroundAppMuteService
                 return;
             }
 
-            // Modifiers still held from VCM's own shortcut would combine with the key, so they are lifted for the
-            // duration of one atomic batch and pressed again afterwards.
-            var held = ModifierKeys.Where(k => IsDown(k.Vk)).ToList();
-            var inputs = new List<NativeMethods.INPUT>();
-            foreach (var (vk, extended) in held) inputs.Add(Key(vk, up: true, extended));
-
-            var modifiers = new List<int>();
-            if (shortcut.Win) modifiers.Add(KeyNames.VK_LWIN);
-            if (shortcut.Ctrl) modifiers.Add(KeyNames.VK_CONTROL);
-            if (shortcut.Alt) modifiers.Add(KeyNames.VK_MENU);
-            if (shortcut.Shift) modifiers.Add(KeyNames.VK_SHIFT);
-            foreach (int vk in modifiers) inputs.Add(Key(vk, up: false, extended: vk == KeyNames.VK_LWIN));
-            inputs.Add(Key(shortcut.Code, up: false));
-            inputs.Add(Key(shortcut.Code, up: true));
-            foreach (int vk in Enumerable.Reverse(modifiers)) inputs.Add(Key(vk, up: true, extended: vk == KeyNames.VK_LWIN));
-
-            foreach (var (vk, extended) in held) inputs.Add(Key(vk, up: false, extended));
-            if (held.Any(k => k.Vk is KeyNames.VK_LWIN or KeyNames.VK_RWIN or KeyNames.VK_LMENU or KeyNames.VK_RMENU))
-            {
-                // Releasing Win or Alt alone would open the Start menu or the menu bar.
-                inputs.Add(Key(0xFF, up: false));
-                inputs.Add(Key(0xFF, up: true));
-            }
-
-            var array = inputs.ToArray();
-            string heldNames = string.Join(", ", held.Select(k => KeyNames.GetName(k.Vk)));
+            var held = ModifierKeys.Where(IsDown).ToList();
+            var array = AppMuteKeySequence.Build(shortcut, held).Select(k => Key(k.Vk, k.Up)).ToArray();
+            string heldNames = string.Join(", ", held.Select(KeyNames.GetName));
             uint sent = NativeMethods.SendInput((uint)array.Length, array, Marshal.SizeOf<NativeMethods.INPUT>());
             if (sent != array.Length) Logger.Warn($"SendInput sent {sent} of {array.Length} events (error {Marshal.GetLastWin32Error()})");
             else Logger.Info($"Application mute shortcut {shortcut} sent, held modifiers: {heldNames}");
@@ -104,8 +79,10 @@ internal static class ForegroundAppMuteService
 
     private static bool IsDown(int vk) => (NativeMethods.GetAsyncKeyState(vk) & 0x8000) != 0;
 
+    private static bool IsExtended(int vk) => vk is KeyNames.VK_LWIN or KeyNames.VK_RWIN or KeyNames.VK_RCONTROL or KeyNames.VK_RMENU;
+
     // Browsers derive KeyboardEvent.code from the scan code, so it must be set along with the virtual key.
-    private static NativeMethods.INPUT Key(int vk, bool up, bool extended = false) => new()
+    private static NativeMethods.INPUT Key(int vk, bool up) => new()
     {
         type = NativeMethods.INPUT_KEYBOARD,
         u = new NativeMethods.InputUnion
@@ -114,7 +91,7 @@ internal static class ForegroundAppMuteService
             {
                 wVk = (ushort)vk,
                 wScan = (ushort)NativeMethods.MapVirtualKey((uint)vk, 0 /* MAPVK_VK_TO_VSC */),
-                dwFlags = (up ? NativeMethods.KEYEVENTF_KEYUP : 0) | (extended ? NativeMethods.KEYEVENTF_EXTENDEDKEY : 0),
+                dwFlags = (up ? NativeMethods.KEYEVENTF_KEYUP : 0) | (IsExtended(vk) ? NativeMethods.KEYEVENTF_EXTENDEDKEY : 0),
                 dwExtraInfo = KeyboardHook.InjectedMarker,
             },
         },
