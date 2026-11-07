@@ -24,13 +24,13 @@ public class SettingsTests
         """;
 
     [Fact]
-    public void Defaults_MatchPowerToys()
+    public void Defaults_AreWinPlusKey()
     {
         var s = new VcmSettings();
-        Assert.Equal("Win + Shift + Q", s.MuteCameraAndMicrophoneHotkey.ToString());
-        Assert.Equal("Win + Shift + A", s.MuteMicrophoneHotkey.ToString());
-        Assert.Equal("Win + Shift + I", s.PushToTalkMicrophoneHotkey.ToString());
-        Assert.Equal("Win + Shift + O", s.MuteCameraHotkey.ToString());
+        Assert.Equal("Win + Q", s.MuteCameraAndMicrophoneHotkey.ToString());
+        Assert.Equal("Win + A", s.MuteMicrophoneHotkey.ToString());
+        Assert.Equal("Win + I", s.PushToTalkMicrophoneHotkey.ToString());
+        Assert.Equal("Win + O", s.MuteCameraHotkey.ToString());
         Assert.Equal(81, s.MuteCameraAndMicrophoneHotkey.Code);
         Assert.False(s.PushToReverseEnabled);
         Assert.Equal(VcmSettings.AllMicrophones, s.SelectedMicrophone);
@@ -60,6 +60,34 @@ public class SettingsTests
         // Keys that PowerToys does not have keep their defaults.
         Assert.True(s.Enabled);
         Assert.True(s.CameraPowerOffWhenMuted);
+    }
+
+    [Fact]
+    public void OldDefaults_AreMigratedOnce()
+    {
+        var s = SettingsSerializer.Deserialize(PowerToysJson);
+        Assert.Equal("Win + Q", s.MuteCameraAndMicrophoneHotkey.ToString());
+        Assert.Equal("Win + I", s.PushToTalkMicrophoneHotkey.ToString());
+        Assert.Equal("Win + O", s.MuteCameraHotkey.ToString());
+        Assert.Equal(VcmSettings.CurrentHotkeyDefaultsVersion, s.HotkeyDefaultsVersion);
+    }
+
+    [Fact]
+    public void CustomShortcut_IsNotMigrated()
+    {
+        var s = SettingsSerializer.Deserialize(PowerToysJson);
+        Assert.Equal("Ctrl + Alt + M", s.MuteMicrophoneHotkey.ToString());
+    }
+
+    [Fact]
+    public void ChosenOldDefault_SurvivesAfterMigration()
+    {
+        var s = SettingsSerializer.Deserialize(PowerToysJson);
+        s.MuteMicrophoneHotkey = new HotkeySettings(true, false, false, true, 'A');
+
+        var again = SettingsSerializer.Deserialize(SettingsSerializer.Serialize(s));
+
+        Assert.Equal("Win + Shift + A", again.MuteMicrophoneHotkey.ToString());
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Microsoft.Win32;
 using Vcm.App.Native;
 using Vcm.Core;
 
@@ -68,12 +69,17 @@ internal sealed class KeyboardHook : IDisposable
         _thread = new Thread(() => Run(ready)) { IsBackground = true, Name = "VCM keyboard hook", Priority = ThreadPriority.Highest };
         _thread.Start();
         ready.Wait();
+        SystemEvents.SessionSwitch += OnSessionSwitch;
     }
+
+    // Key-ups typed on the secure desktop (e.g. after Win+L) never reach the hook, which would leave a modifier stuck.
+    private void OnSessionSwitch(object? sender, SessionSwitchEventArgs e) => _resyncModifiers = true;
 
     private void Stop()
     {
         if (_thread is null) return;
 
+        SystemEvents.SessionSwitch -= OnSessionSwitch;
         NativeMethods.PostThreadMessage(_threadId, NativeMethods.WM_QUIT, IntPtr.Zero, IntPtr.Zero);
         _thread.Join();
         _thread = null;

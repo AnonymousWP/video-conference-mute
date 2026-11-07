@@ -53,6 +53,10 @@ public static class SettingsSerializer
         settings.EnforceMicrophoneMute = ReadBool(props, "enforce_microphone_mute") ?? settings.EnforceMicrophoneMute;
         settings.SyncApplicationMute = ReadBool(props, "sync_application_mute") ?? settings.SyncApplicationMute;
 
+        // A file without the marker (PowerToys, or written before it existed) still holds the old defaults.
+        settings.HotkeyDefaultsVersion = ReadInt(props, "hotkey_defaults_version") ?? 1;
+        settings.MigrateHotkeyDefaults();
+
         settings.Normalize();
         return settings;
     }
@@ -79,6 +83,7 @@ public static class SettingsSerializer
             ["play_sound_on_toggle"] = Value(settings.PlaySoundOnToggle),
             ["enforce_microphone_mute"] = Value(settings.EnforceMicrophoneMute),
             ["sync_application_mute"] = Value(settings.SyncApplicationMute),
+            ["hotkey_defaults_version"] = Value(settings.HotkeyDefaultsVersion),
         };
 
         var root = new JsonObject
@@ -110,6 +115,9 @@ public static class SettingsSerializer
 
     private static bool? ReadBool(JsonObject props, string key) =>
         GetValue(props, key) is JsonValue v && v.TryGetValue<bool>(out var b) ? b : null;
+
+    private static int? ReadInt(JsonObject props, string key) =>
+        GetValue(props, key) is JsonValue v && v.TryGetValue<int>(out var i) ? i : null;
 
     private static HotkeySettings? ReadHotkey(JsonObject props, string key)
     {
