@@ -27,11 +27,11 @@ public class SettingsTests
     public void Defaults_AreWinPlusKey()
     {
         var s = new VcmSettings();
-        Assert.Equal("Win + Q", s.MuteCameraAndMicrophoneHotkey.ToString());
-        Assert.Equal("Win + A", s.MuteMicrophoneHotkey.ToString());
-        Assert.Equal("Win + I", s.PushToTalkMicrophoneHotkey.ToString());
-        Assert.Equal("Win + O", s.MuteCameraHotkey.ToString());
-        Assert.Equal(81, s.MuteCameraAndMicrophoneHotkey.Code);
+        Assert.Equal("Win + A", s.MuteCameraAndMicrophoneHotkey.ToString());
+        Assert.Equal("Win + M", s.MuteMicrophoneHotkey.ToString());
+        Assert.True(s.PushToTalkMicrophoneHotkey.IsEmpty);
+        Assert.Equal("Win + C", s.MuteCameraHotkey.ToString());
+        Assert.Equal('A', s.MuteCameraAndMicrophoneHotkey.Code);
         Assert.False(s.PushToReverseEnabled);
         Assert.Equal(VcmSettings.AllMicrophones, s.SelectedMicrophone);
         Assert.Equal(ToolbarPositions.TopRight, s.ToolbarPosition);
@@ -66,10 +66,36 @@ public class SettingsTests
     public void OldDefaults_AreMigratedOnce()
     {
         var s = SettingsSerializer.Deserialize(PowerToysJson);
-        Assert.Equal("Win + Q", s.MuteCameraAndMicrophoneHotkey.ToString());
-        Assert.Equal("Win + I", s.PushToTalkMicrophoneHotkey.ToString());
-        Assert.Equal("Win + O", s.MuteCameraHotkey.ToString());
+        Assert.Equal("Win + A", s.MuteCameraAndMicrophoneHotkey.ToString());
+        Assert.True(s.PushToTalkMicrophoneHotkey.IsEmpty);
+        Assert.Equal("Win + C", s.MuteCameraHotkey.ToString());
         Assert.Equal(VcmSettings.CurrentHotkeyDefaultsVersion, s.HotkeyDefaultsVersion);
+    }
+
+    [Fact]
+    public void Version2Defaults_AreMigrated()
+    {
+        var s = SettingsSerializer.Deserialize(
+            SettingsSerializer.Serialize(new VcmSettings
+            {
+                HotkeyDefaultsVersion = 2,
+                MuteCameraAndMicrophoneHotkey = new HotkeySettings(true, false, false, false, 'Q'),
+                MuteMicrophoneHotkey = new HotkeySettings(true, false, false, false, 'A'),
+                PushToTalkMicrophoneHotkey = new HotkeySettings(true, false, false, false, 'I'),
+                MuteCameraHotkey = new HotkeySettings(true, false, false, false, 'O'),
+            }));
+
+        Assert.Equal("Win + A", s.MuteCameraAndMicrophoneHotkey.ToString());
+        Assert.Equal("Win + M", s.MuteMicrophoneHotkey.ToString());
+        Assert.True(s.PushToTalkMicrophoneHotkey.IsEmpty);
+        Assert.Equal("Win + C", s.MuteCameraHotkey.ToString());
+    }
+
+    [Fact]
+    public void EmptyShortcut_SurvivesRoundTrip()
+    {
+        var again = SettingsSerializer.Deserialize(SettingsSerializer.Serialize(new VcmSettings()));
+        Assert.True(again.PushToTalkMicrophoneHotkey.IsEmpty);
     }
 
     [Fact]
@@ -112,7 +138,7 @@ public class SettingsTests
         string json = SettingsSerializer.Serialize(new VcmSettings());
         Assert.Contains("\"name\": \"Video Conference\"", json);
         Assert.Contains("\"mute_camera_hotkey\": {", json);
-        Assert.Contains("\"code\": 79", json);
+        Assert.Contains("\"code\": 67", json);
         Assert.Contains("\"toolbar_hide\": {\n      \"value\": \"When both camera and microphone are unmuted\"", json.ReplaceLineEndings("\n"));
     }
 

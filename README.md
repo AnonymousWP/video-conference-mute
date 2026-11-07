@@ -41,13 +41,13 @@ the camera keeps streaming an image of your choice so the call never sees a froz
 
 | | Action | Shortcut |
 |:-:|---|---|
-| 🔇 | Mute camera & microphone | <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd> |
-| 🎙️ | Mute microphone | <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd> |
-| 🗣️ | Push to talk (hold) | <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> |
-| 📷 | Mute camera | <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd> |
+| 🔇 | Mute camera & microphone | <kbd>Win</kbd> + <kbd>A</kbd> |
+| 🎙️ | Mute microphone | <kbd>Win</kbd> + <kbd>M</kbd> |
+| 📷 | Mute camera | <kbd>Win</kbd> + <kbd>C</kbd> |
+| 🗣️ | Push to talk (hold) | not assigned by default |
 
-All shortcuts can be changed. If Windows or another app already uses a combination, VCM takes it over, just like
-PowerToys did.
+All shortcuts can be changed. Other Windows shortcuts, such as <kbd>Win</kbd> + <kbd>I</kbd>, are left to Windows. If
+Windows or another app already uses a combination, VCM takes it over, just like PowerToys did.
 
 ## ✨ Features
 
@@ -104,7 +104,7 @@ your existing PowerToys settings are imported automatically.
    - Administrator rights are needed **once**, to register the virtual camera. VCM itself then runs as a normal
      user from the tray.
 2. **Pick the camera**: in your video-call app, select **VideoConference Mute** as the camera.
-3. **Done**: press <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd> and you are muted. Open the settings from the
+3. **Done**: press <kbd>Win</kbd> + <kbd>A</kbd> and you are muted. Open the settings from the
    tray icon.
 
 ### 📋 Requirements

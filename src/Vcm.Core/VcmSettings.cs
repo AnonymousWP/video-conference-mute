@@ -47,15 +47,15 @@ public sealed class VcmSettings
 {
     public const string AllMicrophones = "[All]";
 
-    // Win+Shift+key caused accidental triggers when typing capital letters.
-    public const int CurrentHotkeyDefaultsVersion = 2;
+    // Only Win+A, Win+C and Win+M are taken; every other Win shortcut (e.g. Win+I) stays with Windows.
+    public const int CurrentHotkeyDefaultsVersion = 3;
 
-    public static HotkeySettings DefaultMuteCameraAndMicrophoneHotkey => new(true, false, false, false, 'Q');
-    public static HotkeySettings DefaultMuteMicrophoneHotkey => new(true, false, false, false, 'A');
-    public static HotkeySettings DefaultPushToTalkMicrophoneHotkey => new(true, false, false, false, 'I');
-    public static HotkeySettings DefaultMuteCameraHotkey => new(true, false, false, false, 'O');
+    public static HotkeySettings DefaultMuteCameraAndMicrophoneHotkey => new(true, false, false, false, 'A');
+    public static HotkeySettings DefaultMuteMicrophoneHotkey => new(true, false, false, false, 'M');
+    public static HotkeySettings DefaultPushToTalkMicrophoneHotkey => new();
+    public static HotkeySettings DefaultMuteCameraHotkey => new(true, false, false, false, 'C');
 
-    /// <summary>Version 1 are the PowerToys defaults (Win+Shift+key); settings of that version are migrated on load.</summary>
+    /// <summary>Version 1 are the PowerToys defaults (Win+Shift+key), version 2 used Win+key; older settings are migrated on load.</summary>
     public int HotkeyDefaultsVersion { get; set; } = CurrentHotkeyDefaultsVersion;
 
     // Settings of the original PowerToys module.
@@ -82,20 +82,29 @@ public sealed class VcmSettings
 
     public VcmSettings Clone() => (VcmSettings)MemberwiseClone();
 
-    /// <summary>Moves shortcuts that are still the old Win+Shift+key defaults to the current defaults, once.</summary>
+    /// <summary>Moves shortcuts that are still the old defaults to the current defaults, once.</summary>
     public void MigrateHotkeyDefaults()
     {
         if (HotkeyDefaultsVersion >= CurrentHotkeyDefaultsVersion) return;
 
-        MuteCameraAndMicrophoneHotkey = MigrateHotkey(MuteCameraAndMicrophoneHotkey, 'Q', DefaultMuteCameraAndMicrophoneHotkey);
-        MuteMicrophoneHotkey = MigrateHotkey(MuteMicrophoneHotkey, 'A', DefaultMuteMicrophoneHotkey);
-        PushToTalkMicrophoneHotkey = MigrateHotkey(PushToTalkMicrophoneHotkey, 'I', DefaultPushToTalkMicrophoneHotkey);
-        MuteCameraHotkey = MigrateHotkey(MuteCameraHotkey, 'O', DefaultMuteCameraHotkey);
+        // Version 1 used Win+Shift+key, version 2 Win+key.
+        bool shift = HotkeyDefaultsVersion < 2;
+
+        // Each value is read before any is replaced, as an old default can be another action's new one.
+        var cameraAndMicrophone = MigrateHotkey(MuteCameraAndMicrophoneHotkey, shift, 'Q', DefaultMuteCameraAndMicrophoneHotkey);
+        var microphone = MigrateHotkey(MuteMicrophoneHotkey, shift, 'A', DefaultMuteMicrophoneHotkey);
+        var pushToTalk = MigrateHotkey(PushToTalkMicrophoneHotkey, shift, 'I', DefaultPushToTalkMicrophoneHotkey);
+        var camera = MigrateHotkey(MuteCameraHotkey, shift, 'O', DefaultMuteCameraHotkey);
+
+        MuteCameraAndMicrophoneHotkey = cameraAndMicrophone;
+        MuteMicrophoneHotkey = microphone;
+        PushToTalkMicrophoneHotkey = pushToTalk;
+        MuteCameraHotkey = camera;
         HotkeyDefaultsVersion = CurrentHotkeyDefaultsVersion;
     }
 
-    private static HotkeySettings MigrateHotkey(HotkeySettings? current, int oldKey, HotkeySettings replacement) =>
-        current is { Win: true, Ctrl: false, Alt: false, Shift: true } && current.Code == oldKey ? replacement : current ?? replacement;
+    private static HotkeySettings MigrateHotkey(HotkeySettings? current, bool shift, int oldKey, HotkeySettings replacement) =>
+        current is { Win: true, Ctrl: false, Alt: false } && current.Shift == shift && current.Code == oldKey ? replacement : current ?? replacement;
 
     /// <summary>Replaces values that are not among the allowed ones with their defaults.</summary>
     public void Normalize()
